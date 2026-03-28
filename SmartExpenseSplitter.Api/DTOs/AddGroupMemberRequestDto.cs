@@ -1,0 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace SmartExpenseSplitter.Api.DTOs;
+
+public class AddGroupMemberRequestDto
+{
+    [Required]
+    [EmailAddress]
+    [MaxLength(255)]
+    public string Email { get; set; } = string.Empty;
+}
