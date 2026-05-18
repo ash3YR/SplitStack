@@ -1,6 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using backend.DTOs;
-using backend.Models;
 using backend.Services;
 
 namespace backend.Controllers;
@@ -9,21 +10,21 @@ namespace backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService) : ControllerBase
 {
-    [HttpPost("register")]
-    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status201Created)]
+    [HttpPost("sync")]
+    [Authorize]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(RegisterRequestDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Sync([FromBody] SyncUserDto request, CancellationToken cancellationToken)
     {
-        var response = await authService.RegisterAsync(request, cancellationToken);
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<AuthResponseDto>.FromData(response));
-    }
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var emailClaim = User.FindFirstValue(ClaimTypes.Email);
 
-    [HttpPost("login")]
-    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(LoginRequestDto request, CancellationToken cancellationToken)
-    {
-        var response = await authService.LoginAsync(request, cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.FromData(response));
+        if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(emailClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return BadRequest("Invalid JWT claims. Subject/Email are required.");
+        }
+
+        await authService.SyncUserAsync(userId, emailClaim, request.Name, cancellationToken);
+        return Ok(new { message = "User synced successfully." });
     }
 }

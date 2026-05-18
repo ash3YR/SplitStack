@@ -15,13 +15,6 @@ using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.ConfigureLogging(logging =>
-{
-    logging.ClearProviders();
-    logging.Services.RemoveAll<ILoggerProvider>();
-    logging.AddConsole();
-    logging.AddDebug();
-});
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 
@@ -139,6 +132,15 @@ app.UseHttpsRedirection();
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapControllers();
+app.MapFallbackToFile("index.html");
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<backend.Data.ApplicationDbContext>();
+    db.Database.ExecuteSqlRaw(System.IO.File.ReadAllText("init.sql"));
+}
 
 app.Run();

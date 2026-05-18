@@ -1,0 +1,14 @@
+.git
+.vs
+.vscode
+*.user
+*.suo
+*.sln.docstates
+bin/
+obj/
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example

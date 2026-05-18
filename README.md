@@ -1,1 +1,3 @@
 working...
+
+fix secrets --supabase ke
