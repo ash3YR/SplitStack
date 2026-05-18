@@ -48,6 +48,11 @@ if (string.IsNullOrEmpty(connectionString))
     }
 }
 
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("CRITICAL ERROR: Database connection string is completely missing! You must configure either 'DATABASE_URL' or 'ConnectionStrings__DefaultConnection' in Render's Environment Variables.");
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
